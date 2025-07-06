@@ -1,0 +1,51 @@
+body {
+	height: 100vh;
+	background: #19092d;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+button{
+	margin: 20px;
+	padding: 40px 80px;
+	border: none;
+	cursor: pointer;
+}
+
+/* PIERWSZY SPOSOB WYKORZYSTANIE CIENIA */
+.first{
+	background: hsl(141, 79%, 47%);
+	box-shadow: inset 0px 0px 0px 0px hsl(204, 100%, 50%);
+	transition: all 0.5s ease-in-out;
+}
+.first:hover{
+	box-shadow: inset 0px -200px 0px 0px hsl(204, 100%, 50%);
+}
+
+/* DRUGI SPOSOB DLUZSZY ALE BARDZIEJ UNIWERSALNY*/
+.sec{
+	background: none;
+	position: relative;
+	overflow: hidden;
+}
+
+.sec:before, .sec:after{
+	content: "";
+	background: hsl(141, 79%, 47%);
+	display: block;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	z-index: -2;
+}
+.sec:after{
+	background: hsl(204, 100%, 50%);
+	top: 100%;
+	transition: all 0.5s ease-in-out;
+}
+.sec:hover:after{
+	top: 0;
+}

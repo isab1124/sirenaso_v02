@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISOR EAP SIRENASO-SC</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .geov {
+            z-index: 0;
+            height: 600px; 
+            width: 100%;
+        }
+        /* Estilos para botones */
+        .button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            margin-right: 5px;
+        }
+        #clear-route-btn {
+            left: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="route-btn" class="button">Generar Ruta</div>
+    <div id="clear-route-btn" class="button">Borrar Ruta</div>
+    <div id="map" class="geov"></div>
+
+    <script>
+        // Inicializar el mapa
+        const map = L.map('map').setView([3.45, -76.53], 13); // Centrado en Cali
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Marcadores para origen y destino
+        let startMarker, endMarker;
+
+        // Instanciar Leaflet Routing Machine pero sin agregar la ruta aún
+        let control = L.Routing.control({
+            waypoints: [],
+            routeWhileDragging: true,
+            createMarker: function(i, waypoint, n) {
+                // Crear marcadores personalizados
+                return L.marker(waypoint.latLng, {
+                    draggable: true
+                });
+            }
+        }).addTo(map);
+
+        // Botones de la interfaz
+        const routeBtn = document.getElementById('route-btn');
+        const clearRouteBtn = document.getElementById('clear-route-btn');
+
+        // Manejador para el clic en el mapa
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+
+            if (!startMarker) {
+                startMarker = L.marker([lat, lng], { draggable: true }).addTo(map).bindPopup('Inicio').openPopup();
+            } else if (!endMarker) {
+                endMarker = L.marker([lat, lng], { draggable: true }).addTo(map).bindPopup('Destino').openPopup();
+            }
+        });
+
+        // Evento para generar la ruta
+        routeBtn.addEventListener('click', function() {
+            if (startMarker && endMarker) {
+                const startLatLng = startMarker.getLatLng();
+                const endLatLng = endMarker.getLatLng();
+                control.setWaypoints([startLatLng, endLatLng]);
+            } else {
+                alert('Seleccione un punto de inicio y un destino en el mapa.');
+            }
+        });
+
+        // Evento para borrar la ruta
+        clearRouteBtn.addEventListener('click', function() {
+            control.setWaypoints([]);
+            if (startMarker) {
+                map.removeLayer(startMarker);
+                startMarker = null;
+            }
+            if (endMarker) {
+                map.removeLayer(endMarker);
+                endMarker = null;
+            }
+        });
+
+       // Función para cargar los puntos desde el servidor
+     async function cargarPuntos() {
+     try {
+        const response = await fetch('obtener_puntos.php'); // Asegúrate de que este archivo exista y esté en el mismo directorio
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const datos = await response.json();
+
+        if (!Array.isArray(datos)) {
+            throw new Error('El formato de los datos no es el esperado. Se esperaba un arreglo.');
+        }
+
+        datos.forEach(punto => {
+            if (punto.latitud && punto.longitud) {
+                const marker = L.marker([parseFloat(punto.latitud), parseFloat(punto.longitud)]).addTo(map);
+                marker.bindPopup(`
+                    <b>Nombre:</b> ${punto.nombre || 'N/A'}<br>
+                    <b>Fecha:</b> ${punto.fecha || 'N/A'}<br>
+                    <b>Nivel:</b> ${punto.nivel || 'N/A'}<br>
+                    <b>Descripción:</b> ${punto.descripcion || 'N/A'}<br>
+                    <img src="${punto.foto || ''}" alt="Foto" style="width: 100px; height: auto;">
+                `);
+            } else {
+                console.warn('Punto omitido debido a datos incompletos:', punto);
+            }
+        });
+
+        } catch (error) {
+        console.error('Error al cargar los puntos:', error);
+        cargarPuntos();
+    </script>
+
+    <script>
+        
+    </script>
+
+
+
+
+    
+    
+</body>
+</html>

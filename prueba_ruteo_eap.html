@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor con Ruteo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <style>
+        .geov {
+            z-index: 0;
+            height: 600px; 
+            width: 100%;
+        }
+        #controls {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="route-btn">Crear Ruta</button>
+        <button id="save-route-btn" disabled>Guardar Ruta</button>
+    </div>
+    <div id="map" class="geov"></div>
+
+    <script>
+        // Inicializar el mapa
+        const map = L.map('map').setView([3.45, -76.53], 13); // Centrado en Cali
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        let routingControl;
+        let markers = [];
+        let routePoints = [];
+
+        // Botones
+        const routeBtn = document.getElementById("route-btn");
+        const saveRouteBtn = document.getElementById("save-route-btn");
+
+        // Función para cargar los puntos existentes
+        async function cargarPuntos() {
+            try {
+                const response = await fetch('obtener_puntos.php');
+                const datos = await response.json();
+
+                datos.forEach(punto => {
+                    const marker = L.marker([punto.latitud, punto.longitud]).addTo(map);
+                    marker.bindPopup(`
+                        <b>Nombre:</b> ${punto.nombre}<br>
+                        <b>Fecha:</b> ${punto.fecha}<br>
+                        <b>Nivel:</b> ${punto.nivel}<br>
+                        <b>Descripción:</b> ${punto.descripcion}<br>
+                        <img src="${punto.foto}" alt="Foto" style="width: 100px; height: auto;">
+                    `);
+
+                    // Almacenar marcadores en un array
+                    markers.push(marker);
+                });
+            } catch (error) {
+                console.error('Error al cargar los puntos:', error);
+            }
+        }
+
+        // Función para activar el modo de ruteo
+        routeBtn.onclick = function() {
+            if (!routingControl) {
+                routePoints = markers.map(marker => marker.getLatLng());
+
+                routingControl = L.Routing.control({
+                    waypoints: routePoints,
+                    createMarker: (i, waypoint) => L.marker(waypoint.latLng),
+                }).addTo(map);
+
+                saveRouteBtn.disabled = false;
+            } else {
+                map.removeControl(routingControl);
+                routingControl = null;
+                saveRouteBtn.disabled = true;
+            }
+        };
+
+        // Función para guardar la ruta
+        saveRouteBtn.onclick = async function() {
+            if (!routingControl) return;
+
+            const route = routingControl.getPlan().getWaypoints().map(wp => ({
+                lat: wp.latLng.lat,
+                lng: wp.latLng.lng
+            }));
+
+            try {
+                await fetch('guardar_ruta.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(route)
+                });
+                alert('Ruta guardada exitosamente.');
+            } catch (error) {
+                console.error('Error al guardar la ruta:', error);
+                alert('No se pudo guardar la ruta.');
+            }
+        };
+
+        // Cargar los puntos al iniciar la página
+        cargarPuntos();
+    </script>
+</body>
+</html>

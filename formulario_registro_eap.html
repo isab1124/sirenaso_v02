@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style_registro_EPA.css">
+    <title>Formulario de registro</title>
+</head>
+<body>
+    <form class="form-register" action="guarda_datos_eap.php" method="POST">
+        <h4>Formulario Registro EAP</h4>
+        <input class="controls" type="text" name="nombres" id="nombres" placeholder="Ingrese Nombre EAP" required>
+        <input class="controls" type="text" name="codigo" id="codigo" placeholder="Ingrese Código EAP" required>
+        <input class="controls" type="text" name="direccion" id="direccion" placeholder="Ingrese Dirección EAP" required>
+        <select class="controls" name="tipo" id="tipo" required>
+                <option value="" disabled selected>Seleccione tipo de EAP</option>
+                <option value="Policía">Policia</option>
+                <option value="Hospital">Hospital</option>
+                <option value="ICBF">ICBF</option>
+                <option value="Ambulancia">Ambulancia</option>
+                <option value="Institución Educativa">Institucion Educativa</option>
+        </select>
+        <input class="controls" type="password" name="correo" id="correo" placeholder="Ingrese una Contraseña" required>
+        <p>Estoy de acuerdo con los<a href="#">Términos y Condiciones</a></p>
+        <input class="botons" type="submit" value="Registrar">
+    </form>
+</body>
+</html>
